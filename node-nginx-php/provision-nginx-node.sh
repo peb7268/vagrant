@@ -55,11 +55,33 @@ sudo rm -rf /usr/share/nginx/www
 sudo ln -sf /vagrant /usr/share/nginx/www
 echo "<?php phpinfo(); ?>" >  /vagrant/index.php
 
-echo "Setting up Nginx default vhost in sites-availible"
+echo "Setting up Nginx default vhost in sites-availible for PHP"
 sudo chmod 777 /etc/nginx/sites-available/default
 sudo curl https://raw.github.com/peb7268/vagrant/master/node-nginx-php/sites-availible/default > /etc/nginx/sites-available/default
 
-#Setup Node
+#Setup Node (untested segment)
+echo "==> Checking Node version $NODE_VERSION installed";
+if [ ! -e /opt/node/$NODE_VERSION ]
+then
+	echo "==> Installing Node.js version $NODE_VERSION"
+	echo "Downloading node source from $NODE_SOURCE"
+
+	cd /usr/src
+	wget --quiet $NODE_SOURCE
+	tar xf node-v$NODE_VERSION.tar.gz
+	cd node-v$NODE_VERSION
+
+	# configure
+	./configure --prefix=/opt/node/$NODE_VERSION
+
+	# make and install
+	make
+	make install
+fi
+
+# create node application links
+ln -sf /opt/node/$NODE_VERSION/bin/node /usr/bin/node
+ln -sf /opt/node/$NODE_VERSION/bin/npm /usr/bin/npm
 
 #Install Package Managers
 echo "installing composer"
@@ -88,11 +110,41 @@ sudo sed -i -e 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php5-fpm.sock/g' 
 
 
 #configuring .bashrc
-echo "alias reload='source ~/.bashrc'" >> .bashrc
-echo "alias nginxdir='cd /etc/nginx ~/.bashrc'" >> .bashrc
-echo "alias qngx='sudo service nginx stop'" >> .bashrc
-echo "alias sngx='sudo service nginx start'" >> .bashrc
-echo "alias www='cd /usr/share/nginx/www/'" >> .bashrc
+cat << EOBRC | sudo tee -a ~/.bashrc
+
+alias reload='source ~/.bashrc'
+alias nginxdir='cd /etc/nginx ~/.bashrc'
+alias qngx='sudo service nginx stop'
+alias sngx='sudo service nginx start'
+alias www='cd /usr/share/nginx/www/'
+CLICOLOR=1
+
+EOBRC
+
+#configure vim
+cat << EOS | sudo tee -a ~/.vimrc
+
+"Vim Settings
+syntax enable
+set background=dark
+let g:solarized_termcolors=256
+colorscheme solarized
+set number
+set incsearch
+set hlsearch
+set ignorecase
+set wildmenu
+set wildmenu                    " show list instead of just completing
+set wildmode=list:longest,full  " command <Tab> completion, list matches, then longest common part, then all
+set foldenable                  " auto fold code
+set autoindent
+set shiftwidth=4
+set tabstop=4
+set softtabstop=4
+filetype plugin indent on
+set pastetoggle=<F2>
+
+EOS
 
 # ensure we have services setup
 echo "==> Checking service configurations";
@@ -101,6 +153,6 @@ then
 	echo "==> Installing nginx service";
 fi
 
-#Restart PHP-FPM
+#Restart Nginx & PHP-FPM
 sudo service nginx restart
 sudo service php5-fpm restart
