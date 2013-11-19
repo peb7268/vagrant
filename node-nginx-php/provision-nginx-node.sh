@@ -2,10 +2,6 @@
 export DEBIAN_FRONTEND=noninteractive
 echo "============== Starting packages installer ==============="
 
-# node settings
-NODE_VERSION=0.10.22
-NODE_SOURCE=http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.gz
-
 echo "installing base packages"
 sudo apt-get install -y vim curl python-software-properties git
 
@@ -60,33 +56,43 @@ sudo chmod 777 /etc/nginx/sites-available/default
 sudo curl https://raw.github.com/peb7268/vagrant/master/node-nginx-php/sites-availible/default > /etc/nginx/sites-available/default
 
 #Setup Node (untested segment)
-echo "==> Checking Node version $NODE_VERSION installed";
-if [ ! -e /opt/node/$NODE_VERSION ]
-then
-	echo "==> Installing Node.js version $NODE_VERSION"
-	echo "Downloading node source from $NODE_SOURCE"
+echo "============ Installing Node Compiler Deps ===================================="
+sudo apt-get install -y build-essential g++
 
-	cd /usr/src
-	wget --quiet $NODE_SOURCE
-	tar xf node-v$NODE_VERSION.tar.gz
-	cd node-v$NODE_VERSION
+# node settings
+NODE_VERSION=0.10.22
+NODE_SOURCE=http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.gz
 
-	# configure
-	./configure --prefix=/opt/node/$NODE_VERSION
+echo "============ Installing Node.js version $NODE_VERSION ========================="
+echo "Downloading node source from $NODE_SOURCE"
 
-	# make and install
-	make
-	make install
-fi
+cd /usr/src
+wget --quiet $NODE_SOURCE
+tar xf node-v$NODE_VERSION.tar.gz
+cd node-v$NODE_VERSION
+
+# configure
+./configure --prefix=/opt/node/$NODE_VERSION
+
+# make and install
+make
+make install
 
 # create node application links
 ln -sf /opt/node/$NODE_VERSION/bin/node /usr/bin/node
 ln -sf /opt/node/$NODE_VERSION/bin/npm /usr/bin/npm
+export PATH=$PATH:$HOME/bin:/opt/node/0.10.22/bin/
+
 
 #Install Package Managers
 echo "installing composer"
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
+
+echo "installing bower"
+sudo npm install -g bower
+sudo npm install -g yo
+sudo npm install -g grunt-cli
 
 #use this command for the next two operations: replaces abc with XYZ
 #sed -i -e 's/abc/XYZ/g' /tmp/file.txt
