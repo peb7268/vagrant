@@ -16,4 +16,4 @@ if [ -n "$BASH_VERSION" ]; then
     fi
 fi
 
-PATH=$HOME/bin:/opt/node/0.10.22/bin/
+export PATH="$HOME/bin:/usr/bin:/usr/local/bin:/opt/node/0.10.22/bin/:$PATH"

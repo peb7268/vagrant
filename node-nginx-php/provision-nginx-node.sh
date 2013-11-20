@@ -1,5 +1,5 @@
 #!/bin/bash
-export DEBIAN_FRONTEND=noninteractive
+# export DEBIAN_FRONTEND=noninteractive
 echo "============== Starting packages installer ==============="
 
 echo "installing base packages"
@@ -81,18 +81,23 @@ make install
 # create node application links
 ln -sf /opt/node/$NODE_VERSION/bin/node /usr/bin/node
 ln -sf /opt/node/$NODE_VERSION/bin/npm /usr/bin/npm
-export PATH=$PATH:$HOME/bin:/opt/node/0.10.22/bin/
 
+#add node to the path
+echo "export PATH='$HOME:/opt/node/$NODE_VERSION/bin/:$PATH'" >> /home/vagrant/.profile
 
-#Install Package Managers
-echo "installing composer"
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-
+#Install Package Managers & a few packages
 echo "installing bower"
 sudo npm install -g bower
 sudo npm install -g yo
 sudo npm install -g grunt-cli
+
+#Install other packages
+sudo npm install -g testem
+
+echo "installing composer"
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+
 
 #use this command for the next two operations: replaces abc with XYZ
 #sed -i -e 's/abc/XYZ/g' /tmp/file.txt
@@ -107,12 +112,6 @@ sudo sed -i -e 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php5-fpm.sock/g' 
 # pear upgrade-all
 # pear config-set auto_discover 1
 # pear install -f --alldeps pear.phpunit.de/PHPUnit
-
-#echo "==> add an nginx user"
-#adduser --system --no-create-home nginx
-
-# create the appropriate nginx links
-#ln -sf /opt/nginx-$NGINX_VERSION /opt/nginx
 
 
 #configuring .bashrc
@@ -151,6 +150,14 @@ filetype plugin indent on
 set pastetoggle=<F2>
 
 EOS
+
+#Install RVM
+\curl -L https://get.rvm.io | bash -s stable
+source /home/vagrant/.rvm/scripts/rvm
+rvm install 2.0.0
+rvm install 1.9.3
+rvm --default use 1.9.3
+gem install bundler
 
 # ensure we have services setup
 echo "==> Checking service configurations";
