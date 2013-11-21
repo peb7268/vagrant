@@ -10,7 +10,11 @@ sudo apt-get install -y vim curl python-software-properties git
 echo "Getting the lastet version of PHP"
 sudo add-apt-repository -y ppa:ondrej/php5
 sudo apt-get update
-sudo apt-get upgrade -y
+
+#prefill the grub-pc selections
+#sudo apt-get install debconf-utils
+#debconf-get-selections | grep grub-pc > /tmp/grubpc.debconf
+#sudo apt-get upgrade -y
 
 #Install nginx
 sudo apt-get -y install nginx
