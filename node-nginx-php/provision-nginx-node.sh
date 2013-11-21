@@ -1,50 +1,56 @@
 #!/bin/bash
-# export DEBIAN_FRONTEND=noninteractive
+export DEBIAN_FRONTEND=noninteractive
 echo "============== Starting packages installer ==============="
+echo "Updating packages.."
+sudo apt-get update
 
 echo "installing base packages"
 sudo apt-get install -y vim curl python-software-properties git
 
-echo "Updating packages.."
-sudo apt-get update
-
 echo "Getting the lastet version of PHP"
-sudo apt-repository -y ppa:ondrej/php5
-
-echo "Updating packages...again..."
+sudo add-apt-repository -y ppa:ondrej/php5
 sudo apt-get update
+sudo apt-get upgrade -y
 
 #Install nginx
 sudo apt-get -y install nginx
-apt-get -y install nginx-extras;
+sudo apt-get -y install nginx-extras
 
 #Mysql prompt settings to silently install
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
 
-#Install PHP & It's deps
 echo " "
 echo "========= Installing PHP & Its' Dependencies ============="
-apt-get -y install php5 php5-fpm php5-common php5-curl php5-json php5-dev php5-gd php5-imagick php5-mcrypt php5-memcache php5-mysql mysql-server php5-pspell php5-snmp php5-sqlite sqlite php5-xmlrpc php5-xsl php-pear libssh2-php php5-cli php5-xdebug > /dev/null
-
-#Install PHPMyadmin & provide defaults for the prompts
-#sudo apt-get -q -y install -y phpmyadmin
-# apt-get -q -y phpmyadmin
-# echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | debconf-set-selections
-# echo 'phpmyadmin phpmyadmin/app-password-confirm password root' | debconf-set-selections
-# echo 'phpmyadmin phpmyadmin/mysql/admin-pass password root' | debconf-set-selections
-# echo 'phpmyadmin phpmyadmin/mysql/app-pass password root' | debconf-set-selections
-# echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
+#libssh2-php not availible for newest php's yet
+sudo apt-get -y install php5 php5-fpm php5-common php5-curl php5-json php5-dev php5-gd php5-imagick php5-mcrypt php5-memcache php5-mysql mysql-server php5-pspell php5-snmp php5-sqlite sqlite php5-xmlrpc php5-xsl php-pear php5-cli php5-xdebug > /dev/null
 
 #Configure Xdebug
 echo "configuring xdebug"
-cat << EOF | sudo tee -a /etc/php5/mods-availible/xdebug.ini
+cat << EOF | sudo tee -a /etc/php5/mods-available/xdebug.ini
 
 xdebug.scream=1
 xdebug.cli_color=1
 xdebug.show_local_vars=1
 
 EOF
+
+#use this command for the next two operations: replaces abc with XYZ
+#sed -i -e 's/abc/XYZ/g' /tmp/file.txt
+#Open the /etc/php5/fpm/php.ini file and change the cgi.fix_pathinfo from 1 to 0 and un comment it.
+sudo sed -i -e 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php5/fpm/php.ini
+sudo sed -i -e 's/display_errors = Off/display_errors = On/g' /etc/php5/fpm/php.ini
+
+#Open this /etc/php5/fpm/pool.d/www.conf file and change the listen line from listen 127.0.0.1:9000 to /var/run/php5-fpm.sock
+sudo sed -i -e 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php5-fpm.sock/g' /etc/php5/fpm/pool.d/www.conf
+
+#Install PHPMyadmin & provide defaults for the prompts
+#sudo apt-get -q -y install -y phpmyadmin
+# echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | debconf-set-selections
+# echo 'phpmyadmin phpmyadmin/app-password-confirm password root' | debconf-set-selections
+# echo 'phpmyadmin phpmyadmin/mysql/admin-pass password root' | debconf-set-selections
+# echo 'phpmyadmin phpmyadmin/mysql/app-pass password root' | debconf-set-selections
+# echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
 
 echo "Setting up shared folders with vagrant: mapping it the the my webroot folder"
 sudo rm -rf /usr/share/nginx/www
@@ -94,25 +100,18 @@ sudo npm install -g grunt-cli
 #Install other packages
 sudo npm install -g testem
 
+#Testing if a bin exists
+#command -v php >/dev/null 2>&1 || {
+#	echo "php not found"
+#}
 echo "installing composer"
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 
-
-#use this command for the next two operations: replaces abc with XYZ
-#sed -i -e 's/abc/XYZ/g' /tmp/file.txt
-
-#Open the /etc/php5/fpm/php.ini file and change the cgi.fix_pathinfo from 1 to 0 and un comment it.
-sudo sed -i -e 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g' /etc/php5/fpm/php.ini
-
-#Open this /etc/php5/fpm/pool.d/www.conf file and change the listen line from listen 127.0.0.1:9000 to /var/run/php5-fpm.sock
-sudo sed -i -e 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php5-fpm.sock/g' /etc/php5/fpm/pool.d/www.conf
-
 # Install PHPUnit
-# pear upgrade-all
-# pear config-set auto_discover 1
-# pear install -f --alldeps pear.phpunit.de/PHPUnit
-
+sudo pear upgrade-all
+sudo pear config-set auto_discover 1
+sudo pear install -f --alldeps pear.phpunit.de/PHPUnit
 
 #configuring .bashrc
 cat << EOBRC | sudo tee -a ~/.bashrc
@@ -152,12 +151,14 @@ set pastetoggle=<F2>
 EOS
 
 #Install RVM
-\curl -L https://get.rvm.io | bash -s stable
+curl -L https://get.rvm.io | bash -s stable
 source /home/vagrant/.rvm/scripts/rvm
 rvm install 2.0.0
 rvm install 1.9.3
 rvm --default use 1.9.3
 gem install bundler
+sudo curl https://raw.github.com/peb7268/vagrant/master/node-nginx-php/Gemfile > Gemfile
+bundle install
 
 # ensure we have services setup
 echo "==> Checking service configurations";
