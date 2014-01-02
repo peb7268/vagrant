@@ -1,0 +1,15 @@
+<VirtualHost *:80>
+        DocumentRoot "/var/www/public"
+        ServerName "dev.intengodev.com"
+
+        <Directory /var/www/>
+                Options Indexes FollowSymLinks MultiViews
+                AllowOverride All
+                Order allow,deny
+                allow from all
+        </Directory>
+
+        ErrorLog /var/log/apache2/error.log
+        LogLevel warn
+        CustomLog /var/log/apache2/access.log combined
+</VirtualHost>
