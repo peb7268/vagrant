@@ -14,6 +14,17 @@ class wordpress {
         require => [Service["mysql"], Exec["set-mysql-password"]]
 	}
 
+	exec { "set-mysql-password":
+        onlyif => "mysqladmin -uroot -p$mysqlPassword status",
+        command => "mysqladmin -uroot -proot password $mysqlPassword",
+        require => Service["mysql"],
+    }
+
+    exec { "grant-default-db":
+        command => "/usr/bin/mysql -uroot -p$mysqlPassword -e 'grant all on `$project_name`.* to `root@localhost`;'",
+        require => [Service["mysql"], Exec["make the wp database"]]
+    }
+
 	exec { "use the wp-config-sample as the config file":
 		command => "mv wp-config-sample.php ./wp-config.php",
 		require => [Exec['make the wp database']]

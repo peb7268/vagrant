@@ -14,8 +14,6 @@ exec { 'apt-get update':
         #require => Exec['add php55 apt-repo']
 }
 
-
-
 include bootstrap   	#Sets the fullyqualified domain name and some basics
 include other       	#curl and sqlite
 include rvm 			#Install ruby & rvm
